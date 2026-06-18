@@ -68,10 +68,8 @@ const path = require('path');
 const zlib = require('zlib');
 const os = require('os');
 
-// ✅ ADD THIS: Import groupstatus button and text reply handlers
+// ✅ IMPORTS
 const { handleGroupStatusButton, handleGroupStatusTextReply } = require('./commands/admin/groupstatus');
-
-// ✅ ADD THIS: Import auto daily scheduler
 const { startAutoDaily } = require('./commands/owner/autodaily');
 
 // Remove Puppeteer cache (if some dependency downloaded Chromium into ~/.cache/puppeteer)
