@@ -385,7 +385,9 @@ const handleMessage = async (sock, msg) => {
       return; // Silently ignore system messages
     }
     
-    // Auto-React System
+    // ============================================================
+    // ✅ HUMAN-LIKE AUTO-REACT (40% Chance, 2 min Cooldown)
+    // ============================================================
     try {
       // Clear cache to get fresh config values
       delete require.cache[require.resolve('./config')];
@@ -393,31 +395,44 @@ const handleMessage = async (sock, msg) => {
 
       if (config.autoReact && msg.message && !msg.key.fromMe) {
         const content = msg.message.ephemeralMessage?.message || msg.message;
-        const text =
-          content.conversation ||
-          content.extendedTextMessage?.text ||
-          '';
-
+        const text = content.conversation || content.extendedTextMessage?.text || '';
         const jid = msg.key.remoteJid;
-        const emojis = ['❤️','🔥','👌','💀','😁','✨','👍','🤨','😎','😂','🤝','💫'];
-        
-        const mode = config.autoReactMode || 'bot';
+        const sender = msg.key.participant || msg.key.remoteJid;
 
-        if (mode === 'bot') {
-          const prefixList = ['.', '/', '#'];
-          if (prefixList.includes(text?.trim()[0])) {
-            await sock.sendMessage(jid, {
-              react: { text: '⏳', key: msg.key }
-            });
-          }
-        }
+        // --- 1. Cooldown per user (2 minutes) ---
+        const cooldownKey = `react_${sender}`;
+        const lastReact = global.reactCooldown?.get(cooldownKey) || 0;
+        if (Date.now() - lastReact < 2 * 60 * 1000) return; // 2 min cooldown
+        if (!global.reactCooldown) global.reactCooldown = new Map();
 
-        if (mode === 'all') {
-          const rand = emojis[Math.floor(Math.random() * emojis.length)];
-          await sock.sendMessage(jid, {
-            react: { text: rand, key: msg.key }
-          });
-        }
+        // --- 2. Random chance (40%) ---
+        if (Math.random() > 0.40) return;
+
+        // --- 3. Ignore short messages (less than 3 words) ---
+        const wordCount = text.trim().split(/\s+/).length;
+        if (wordCount < 3 && !text.startsWith('.')) return;
+
+        // --- 4. Random delay (1-4 seconds) ---
+        const delay = 1000 + Math.floor(Math.random() * 3000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+
+        // --- 5. Large emoji list (natural reactions) ---
+        const emojis = [
+          '❤️', '🔥', '😂', '😍', '🥰', '🤣', '😎', '🤔', '👍', '🙌', '✨',
+          '💀', '😁', '👌', '🤨', '😊', '🥲', '🫶', '💯', '👀', '🙏', '😭',
+          '🤗', '😅', '😘', '😇', '😌', '🤩', '😜', '🤪', '😋', '🤭', '😏',
+          '🥺', '😤', '🤯', '😱', '🫡', '💪', '⚡', '💫'
+        ];
+        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+        // --- 6. Send reaction ---
+        await sock.sendMessage(jid, {
+          react: { text: emoji, key: msg.key }
+        }).catch(() => {});
+
+        // --- 7. Update cooldown ---
+        global.reactCooldown.set(cooldownKey, Date.now());
+        console.log(`😊 Auto-react: ${emoji} to ${sender.split('@')[0]}`);
       }
     } catch (e) {
       console.error('[AutoReact Error]', e.message);
