@@ -902,7 +902,7 @@ const handleGroupUpdate = async (sock, update) => {
       if (action === 'add' && groupSettings.welcome) {
         try {
           // ✅ MODIFIED: Only send custom text welcome message (no image, no extra data)
-          const customMsg = `_W3LLC0M3 H0 GY4 APK4 J4NU KHUSHBU L4G4 KE 🥹💋_ @${participantNumber}`;
+          const customMsg = `_[[ W3LLC0M3 H0 GY4 APK4 J4NU KHUSHBU L4G4 KE 🥹💋 ]] LINK NA DALNA LINK ALOWED NHI HAII B0T REMOVE KR DEGA ⚠️_ @${participantNumber}`;
 await sock.sendMessage(id, { text: customMsg, mentions: [participantJid] });
         } catch (err) {
           console.error('Welcome send error:', err);
